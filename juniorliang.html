@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聊聊Bar | AI 聊天機器人</title>
+<style>
+  html, body { margin:0; padding:0; font-family:"Noto Sans TC", sans-serif; height:100%; overflow-x:hidden; }
+  body { color:#f0f0f0; background:#0f2027; display:flex; flex-direction:column; align-items:center; text-align:center; position:relative; }
+  canvas#bg { position:fixed; top:0; left:0; z-index:-1; }
+
+  header { padding:60px 20px 30px; }
+  header img { width:160px; border-radius:15px; box-shadow:0 5px 25px rgba(0,255,255,0.3);}
+  h1 { font-size:3em; margin:20px 0 10px; color:#00ffe7; text-shadow:0 0 10px #00ffe7,0 0 20px #00ffe7; }
+  p { max-width:600px; margin:10px auto; line-height:1.8; font-size:1.1em; color:#c0f0ff; }
+
+  .btn { display:inline-block; margin-top:30px; padding:14px 28px; border-radius:50px; background:#00ffe7; color:#0f2027; font-weight:bold; text-decoration:none; transition:0.3s; box-shadow:0 0 15px #00ffe7;}
+  .btn:hover { background:#00d9c0; box-shadow:0 0 25px #00d9c0; }
+
+  main { padding:20px; width:100%; max-width:1000px; display:flex; flex-direction:column; align-items:center; }
+
+  .features { display:flex; flex-wrap:wrap; justify-content:center; margin-top:40px; gap:20px; }
+  .card { background:rgba(0,255,231,0.1); backdrop-filter:blur(10px); border-radius:20px; padding:20px; width:220px; box-shadow:0 0 15px rgba(0,255,231,0.3); transition:0.3s; }
+  .card:hover { transform:translateY(-10px); box-shadow:0 0 25px rgba(0,255,231,0.5); }
+  .card h3 { color:#00ffe7; margin-bottom:10px; }
+  .card p { font-size:0.95em; line-height:1.5; }
+
+  footer { margin-top:auto; padding:20px; font-size:0.9em; color:#80cfff; }
+
+  #topBtn { position:fixed; bottom:30px; right:30px; display:none; background:#00ffe7; color:#0f2027; border:none; padding:12px 16px; border-radius:50%; cursor:pointer; box-shadow:0 0 15px #00ffe7; transition:0.3s; font-size:18px;}
+  #topBtn:hover { background:#00d9c0; box-shadow:0 0 25px #00d9c0; }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<header>
+  <img src="logo.png" alt="聊聊Bar Logo">
+  <h1>聊聊Bar</h1>
+  <p>💬 你的專屬 AI 聊天夥伴，隨時陪你聊天、抒發心情，讓生活更有溫度。</p>
+</header>
+
+<main>
+  <p>聊聊Bar 是一個 LINE 聊天機器人，結合人工智慧與人性化互動，不論是忙碌的工作日還是孤單的夜晚，你都可以和聊聊Bar輕鬆對話、放鬆心情。</p>
+  <a href="https://line.me/R/ti/p/~yourlineid" class="btn">立即加入聊聊Bar</a>
+
+  <div class="features">
+    <div class="card">
+      <h3>智能聊天</h3>
+      <p>即時回應你的文字，提供人性化對話體驗。</p>
+    </div>
+    <div class="card">
+      <h3>放鬆心情</h3>
+      <p>分享心情，AI 會陪你聊天、舒緩壓力。</p>
+    </div>
+    <div class="card">
+      <h3>提醒功能</h3>
+      <p>可設定日常小提醒，讓生活更有條理。</p>
+    </div>
+    <div class="card">
+      <h3>趣味互動</h3>
+      <p>貼圖、表情、趣味對話，讓聊天不單調。</p>
+    </div>
+  </div>
+</main>
+
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<footer>
+  © 2025 聊聊Bar | Powered by LingSync Studio
+</footer>
+
+<script>
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+
+const particles = [];
+const particleCount = 100;
+const mouse = { x:null, y:null, radius:100 };
+
+// resize
+window.addEventListener('resize', ()=>{ w=canvas.width=window.innerWidth; h=canvas.height=window.innerHeight; });
+
+// mouse move
+window.addEventListener('mousemove', e => { mouse.x=e.x; mouse.y=e.y; });
+
+// mouse click particle explosion
+window.addEventListener('click', e=>{
+  for(let i=0;i<30;i++){
+    particles.push(new ExplosionParticle(e.x,e.y));
+  }
+});
+
+// 基本粒子
+class Particle {
+  constructor(){
+    this.x=Math.random()*w;
+    this.y=Math.random()*h;
+    this.radius=Math.random()*2+1;
+    this.dx=(Math.random()-0.5)*0.5;
+    this.dy=(Math.random()-0.5)*0.5;
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,255,231,0.7)';
+    ctx.fill();
+  }
+  update(){
+    this.x+=this.dx;
+    this.y+=this.dy;
+    if(this.x<0||this.x>w)this.dx*=-1;
+    if(this.y<0||this.y>h)this.dy*=-1;
+    if(mouse.x && mouse.y){
+      let dx = this.x - mouse.x;
+      let dy = this.y - mouse.y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < mouse.radius){
+        this.x += dx/10;
+        this.y += dy/10;
+      }
+    }
+    this.draw();
+  }
+}
+
+// 點擊爆炸粒子
+class ExplosionParticle {
+  constructor(x,y){
+    this.x=x;
+    this.y=y;
+    this.radius=Math.random()*2+1;
+    this.dx=(Math.random()-0.5)*5;
+    this.dy=(Math.random()-0.5)*5;
+    this.life=60;
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,255,231,'+ (this.life/60) +')';
+    ctx.fill();
+  }
+  update(){
+    this.x+=this.dx;
+    this.y+=this.dy;
+    this.life--;
+    this.draw();
+  }
+}
+
+// 初始化粒子
+for(let i=0;i<particleCount;i++) particles.push(new Particle());
+
+function animate(){
+  ctx.clearRect(0,0,w,h);
+  particles.forEach((p,i)=>{
+    p.update();
+    if(p.life!==undefined && p.life<=0){
+      particles.splice(i,1);
+    }
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+
+// 回頂端按鈕
+window.onscroll=function(){ document.getElementById('topBtn').style.display=(document.documentElement.scrollTop>200)?'block':'none'; }
+</script>
+
+</body>
+</html>
